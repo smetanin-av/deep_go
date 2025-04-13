@@ -21,8 +21,6 @@ func NewCircularQueue[T constraints.Signed](size int) CircularQueue[T] {
 	}
 
 	return CircularQueue[T]{
-		len:    0,
-		front:  0,
 		rear:   -1,
 		values: make([]T, size),
 	}
