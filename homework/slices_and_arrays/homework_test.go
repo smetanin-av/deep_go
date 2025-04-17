@@ -1,16 +1,11 @@
 package main
 
 import (
-	"errors"
 	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/exp/constraints"
-)
-
-var (
-	ErrSizeOutOfRange = errors.New("size out of range")
 )
 
 // go test -v homework_test.go
@@ -20,15 +15,8 @@ type CircularQueue[T constraints.Signed] struct {
 	len, front, rear int
 }
 
-func NewCircularQueue[T constraints.Signed](size int) (CircularQueue[T], error) {
-	if size <= 0 {
-		return CircularQueue[T]{}, ErrSizeOutOfRange
-	}
-
-	return CircularQueue[T]{
-		rear:   -1,
-		values: make([]T, size),
-	}, nil
+func NewCircularQueue[T constraints.Signed](size int) CircularQueue[T] {
+	return CircularQueue[T]{rear: -1, values: make([]T, size)}
 }
 
 func (q *CircularQueue[T]) Push(value T) bool {
@@ -88,11 +76,7 @@ func (q *CircularQueue[T]) Clear() {
 	q.rear = -1
 }
 
-func (q *CircularQueue[T]) Resize(newSize int) error {
-	if newSize <= 0 {
-		return ErrSizeOutOfRange
-	}
-
+func (q *CircularQueue[T]) Resize(newSize int) {
 	if q.len > newSize {
 		q.len = newSize
 	}
@@ -106,8 +90,6 @@ func (q *CircularQueue[T]) Resize(newSize int) error {
 	q.values = values
 	q.front = 0
 	q.rear = q.len - 1
-
-	return nil
 }
 
 func (q *CircularQueue[T]) nextPos(pos int) int {
@@ -121,8 +103,7 @@ func (q *CircularQueue[T]) nextPos(pos int) int {
 func TestCircularQueue(t *testing.T) {
 	t.Run("critical path", func(t *testing.T) {
 		const queueSize = 3
-		queue, err := NewCircularQueue[int](queueSize)
-		assert.NoError(t, err)
+		queue := NewCircularQueue[int](queueSize)
 
 		assert.True(t, queue.Empty())
 		assert.False(t, queue.Full())
@@ -165,8 +146,7 @@ func TestCircularQueue(t *testing.T) {
 
 	t.Run("clear queue", func(t *testing.T) {
 		const queueSize = 3
-		queue, err := NewCircularQueue[int16](queueSize)
-		assert.NoError(t, err)
+		queue := NewCircularQueue[int16](queueSize)
 
 		assert.True(t, queue.Push(1))
 		assert.True(t, queue.Push(2))
@@ -185,8 +165,7 @@ func TestCircularQueue(t *testing.T) {
 
 	t.Run("resize queue", func(t *testing.T) {
 		const initQueueSize = 2
-		queue, err := NewCircularQueue[int32](initQueueSize)
-		assert.NoError(t, err)
+		queue := NewCircularQueue[int32](initQueueSize)
 		assert.Equal(t, initQueueSize, queue.Size())
 
 		assert.True(t, queue.Push(1))
@@ -221,22 +200,5 @@ func TestCircularQueue(t *testing.T) {
 		assert.Equal(t, []int32{3, 4}, queue.values)
 		assert.Equal(t, int32(3), queue.Front())
 		assert.Equal(t, int32(4), queue.Back())
-	})
-
-	t.Run("invalid size", func(t *testing.T) {
-		_, err := NewCircularQueue[int](-1)
-		assert.ErrorIs(t, err, ErrSizeOutOfRange)
-
-		_, err = NewCircularQueue[int](0)
-		assert.ErrorIs(t, err, ErrSizeOutOfRange)
-
-		queue, err := NewCircularQueue[int](1)
-		assert.NoError(t, err)
-
-		err = queue.Resize(-1)
-		assert.ErrorIs(t, err, ErrSizeOutOfRange)
-
-		err = queue.Resize(0)
-		assert.ErrorIs(t, err, ErrSizeOutOfRange)
 	})
 }
