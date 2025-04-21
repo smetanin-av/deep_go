@@ -1,7 +1,6 @@
 package main
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -53,10 +52,13 @@ func (m *OrderedMap[TKey, TVal]) Erase(key TKey) {
 
 	var replace *mapNode[TKey, TVal]
 	switch {
+	case node.left == nil:
+		replace = node.right
 	case node.right == nil:
 		replace = node.left
-	case node.left == nil || node.right.left == nil:
+	case node.right.left == nil:
 		replace = node.right
+		replace.left = node.left
 	default:
 		replace = m.popMinNode(node.right)
 		replace.left, replace.right = node.left, node.right
@@ -151,12 +153,10 @@ func TestOrderedMap(t *testing.T) {
 	assert.False(t, data.Contains(13))
 
 	var keys []int
-	expectedKeys := []int{2, 4, 5, 10, 12, 14, 15}
 	data.ForEach(func(key, _ int) {
 		keys = append(keys, key)
 	})
-
-	assert.True(t, reflect.DeepEqual(expectedKeys, keys))
+	assert.Equal(t, []int{2, 4, 5, 10, 12, 14, 15}, keys)
 
 	data.Erase(15)
 	data.Erase(14)
@@ -169,10 +169,16 @@ func TestOrderedMap(t *testing.T) {
 	assert.False(t, data.Contains(14))
 
 	keys = nil
-	expectedKeys = []int{4, 5, 10, 12}
 	data.ForEach(func(key, _ int) {
 		keys = append(keys, key)
 	})
+	assert.Equal(t, []int{4, 5, 10, 12}, keys)
 
-	assert.True(t, reflect.DeepEqual(expectedKeys, keys))
+	data.Erase(10)
+
+	keys = nil
+	data.ForEach(func(key, _ int) {
+		keys = append(keys, key)
+	})
+	assert.Equal(t, []int{4, 5, 12}, keys)
 }
