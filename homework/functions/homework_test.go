@@ -2,24 +2,41 @@ package main
 
 import (
 	"reflect"
+	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func Map(data []int, action func(int) int) []int {
-	// need to implement
-	return nil
+func Map[T any](data []T, action func(T) T) []T {
+	if data == nil {
+		return nil
+	}
+	out := make([]T, 0, len(data))
+	for _, v := range data {
+		out = append(out, action(v))
+	}
+	return out
 }
 
-func Filter(data []int, action func(int) bool) []int {
-	// need to implement
-	return nil
+func Filter[T any](data []T, action func(T) bool) []T {
+	if data == nil {
+		return nil
+	}
+	out := make([]T, 0, len(data))
+	for _, v := range data {
+		if action(v) {
+			out = append(out, v)
+		}
+	}
+	return slices.Clone(out)
 }
 
-func Reduce(data []int, initial int, action func(int, int) int) int {
-	// need to implement
-	return 0
+func Reduce[T any](data []T, initial T, action func(T, T) T) T {
+	for _, v := range data {
+		initial = action(initial, v)
+	}
+	return initial
 }
 
 func TestMap(t *testing.T) {
@@ -59,7 +76,7 @@ func TestMap(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			result := Map(test.data, test.action)
-			assert.True(t, reflect.DeepEqual(test.result, result))
+			assert.Equal(t, test.result, result)
 		})
 	}
 }
