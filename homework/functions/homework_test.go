@@ -1,7 +1,6 @@
 package main
 
 import (
-	"reflect"
 	"slices"
 	"testing"
 
@@ -118,7 +117,7 @@ func TestFilter(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			result := Filter(test.data, test.action)
-			assert.True(t, reflect.DeepEqual(test.result, result))
+			assert.Equal(t, test.result, result)
 		})
 	}
 }
