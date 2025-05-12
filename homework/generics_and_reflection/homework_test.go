@@ -24,7 +24,7 @@ func Serialize[T any](obj T) string {
 
 func serializeAny(val reflect.Value) string {
 	if !val.IsValid() {
-		return "<nil>"
+		return val.String()
 	}
 
 	switch val.Type().Kind() {
@@ -70,14 +70,11 @@ func serializeAny(val reflect.Value) string {
 		}
 		return serializeArray(val)
 
-	case reflect.String:
-		return val.String()
-
 	case reflect.Struct:
 		return serializeStruct(val)
 
 	default:
-		return val.Type().String()
+		return val.String()
 	}
 }
 
