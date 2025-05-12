@@ -77,7 +77,7 @@ func serializeAny(val reflect.Value) string {
 		return serializeStruct(val)
 
 	default:
-		return val.Type().Name()
+		return val.Type().String()
 	}
 }
 
