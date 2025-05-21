@@ -138,9 +138,17 @@ const (
 )
 
 type GamePerson struct {
-	name    [42]byte
-	f1, f2  uint16
-	f3, f4  byte
+	name [42]byte
+
+	// bits 0-9 - mana, bits 10-15 - name length
+	f1 uint16
+	// bits 0-9 - health, bit 10 - house, bit 11 - gun, bit 12 - family, bits 13-14 - type
+	f2 uint16
+	// bits 0-3 - respect, bits 4-7 - strength
+	f3 byte
+	// bits 0-3 - experience, bits 4-7 - level
+	f4 byte
+
 	x, y, z int32
 	gold    uint32
 }
