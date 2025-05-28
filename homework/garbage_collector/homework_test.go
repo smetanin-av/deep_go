@@ -1,7 +1,6 @@
 package main
 
 import (
-	"reflect"
 	"testing"
 	"unsafe"
 
@@ -11,8 +10,32 @@ import (
 // go test -v homework_test.go
 
 func Trace(stacks [][]uintptr) []uintptr {
-	// need to implement
-	return nil
+	var res []uintptr
+	seen := make(map[uintptr]struct{})
+
+	var dfs func(uintptr)
+	dfs = func(ptr uintptr) {
+		if ptr == 0 {
+			return
+		}
+
+		if _, ok := seen[ptr]; ok {
+			return
+		}
+
+		seen[ptr] = struct{}{}
+		res = append(res, ptr)
+
+		dfs(*(*uintptr)(unsafe.Pointer(ptr)))
+	}
+
+	for _, stack := range stacks {
+		for _, ptr := range stack {
+			dfs(ptr)
+		}
+	}
+
+	return res
 }
 
 func TestTrace(t *testing.T) {
@@ -46,17 +69,17 @@ func TestTrace(t *testing.T) {
 		},
 	}
 
-	pointers := Trace(stacks)
-	expectedPointers := []uintptr{
+	expected := []uintptr{
 		uintptr(unsafe.Pointer(&heapPointer1)),
+		uintptr(unsafe.Pointer(&heapObjects[1])),
 		uintptr(unsafe.Pointer(&heapObjects[0])),
 		uintptr(unsafe.Pointer(&heapPointer2)),
-		uintptr(unsafe.Pointer(&heapObjects[1])),
 		uintptr(unsafe.Pointer(&heapObjects[2])),
 		uintptr(unsafe.Pointer(&heapPointer4)),
 		uintptr(unsafe.Pointer(&heapPointer3)),
 		uintptr(unsafe.Pointer(&heapObjects[3])),
 	}
+	pointers := Trace(stacks)
 
-	assert.True(t, reflect.DeepEqual(expectedPointers, pointers))
+	assert.Equal(t, expected, pointers)
 }
