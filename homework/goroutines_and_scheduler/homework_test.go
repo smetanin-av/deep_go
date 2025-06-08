@@ -1,6 +1,7 @@
 package main
 
 import (
+	"container/heap"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -11,29 +12,69 @@ type Task struct {
 	Priority   int
 }
 
+type TasksQueue struct {
+	tasks []Task
+	index map[int]int
+}
+
+func NewTasksQueue() *TasksQueue {
+	return &TasksQueue{index: make(map[int]int)}
+}
+
+func (q *TasksQueue) Len() int {
+	return len(q.tasks)
+}
+
+func (q *TasksQueue) Less(i, j int) bool {
+	return q.tasks[i].Priority > q.tasks[j].Priority
+}
+
+func (q *TasksQueue) Swap(i, j int) {
+	q.tasks[i], q.tasks[j] = q.tasks[j], q.tasks[i]
+	q.index[q.tasks[i].Identifier] = i
+	q.index[q.tasks[j].Identifier] = j
+}
+
+func (q *TasksQueue) Push(x any) {
+	task := x.(Task)
+	q.tasks = append(q.tasks, task)
+	q.index[task.Identifier] = len(q.tasks) - 1
+}
+
+func (q *TasksQueue) Pop() any {
+	task := q.tasks[len(q.tasks)-1]
+	q.tasks = q.tasks[:len(q.tasks)-1]
+	delete(q.index, task.Identifier)
+	return task
+}
+
+func (q *TasksQueue) Update(identifier int, priority int) {
+	index := q.index[identifier]
+	q.tasks[index].Priority = priority
+	heap.Fix(q, index)
+}
+
 type Scheduler struct {
-	// need to implement
+	queue *TasksQueue
 }
 
 func NewScheduler() Scheduler {
-	// need to implement
-	return Scheduler{}
+	return Scheduler{queue: NewTasksQueue()}
 }
 
 func (s *Scheduler) AddTask(task Task) {
-	// need to implement
+	heap.Push(s.queue, task)
 }
 
 func (s *Scheduler) ChangeTaskPriority(taskID int, newPriority int) {
-	// need to implement
+	s.queue.Update(taskID, newPriority)
 }
 
 func (s *Scheduler) GetTask() Task {
-	// need to implement
-	return Task{}
+	return heap.Pop(s.queue).(Task)
 }
 
-func TestTrace(t *testing.T) {
+func TestScheduler(t *testing.T) {
 	task1 := Task{Identifier: 1, Priority: 10}
 	task2 := Task{Identifier: 2, Priority: 20}
 	task3 := Task{Identifier: 3, Priority: 30}
@@ -54,6 +95,7 @@ func TestTrace(t *testing.T) {
 	assert.Equal(t, task4, task)
 
 	scheduler.ChangeTaskPriority(1, 100)
+	task1.Priority = 100
 
 	task = scheduler.GetTask()
 	assert.Equal(t, task1, task)
